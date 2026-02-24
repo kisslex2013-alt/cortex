@@ -10,6 +10,9 @@ import { SelfCheck, ContextHealthMonitor, HealthDashboard } from '@jarvis/watchd
 import { createSwarm } from '@jarvis/swarm';
 import { LongMemory } from '@jarvis/memory';
 import { globalApprovalQueue } from '@jarvis/sandbox-policy';
+import { createRouter } from '@jarvis/brain';
+import { UnifiedPipeline } from '@jarvis/pipeline';
+import { createTelegramConnector } from '@jarvis/connector-telegram';
 
 // --- Configuration ---
 const JWT_SECRET = process.env.JWT_SECRET || 'jarvis-dev-secret-42';
@@ -21,11 +24,42 @@ kernel.start().catch(console.error);
 
 const dashboard = new HealthDashboard(new SelfCheck(), new ContextHealthMonitor());
 
-// --- Initialize Global Memory ---
+// --- Initialize Global Memory & Brain ---
 const globalMemory = new LongMemory();
+const globalBrain = createRouter();
+const globalPipeline = new UnifiedPipeline();
+
 globalMemory.add('Jarvis System initialized', 'tech', { confidence: 'high', source: 'system' });
 globalMemory.add('Test fact for demonstration', 'personal', { confidence: 'medium', source: 'dev' });
 globalMemory.add('API Gateway connected to Cortex', 'tech', { confidence: 'high', source: 'gateway' });
+
+// --- Initialize Telegram ---
+const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+if (telegramToken && telegramToken !== 'your_telegram_bot_token_here') {
+    const tg = createTelegramConnector(telegramToken);
+    tg.onMessage(async (msg) => {
+        kernel.dispatch({
+            type: 'log',
+            source: 'telegram',
+            payload: `[Telegram] received: "${msg.text}"`,
+            timestamp: Date.now()
+        }).catch(console.error);
+
+        let reply = '';
+        if (msg.text.startsWith('[TASK:')) {
+            const result = globalPipeline.prepare(msg.text);
+            if (result.status === 'success') {
+                reply = `Task "${result.task.name}" is valid and ready for Swarm DAG (Node ID: ${result.nodeId}).`;
+            } else {
+                reply = `Task rejected: ${result.error || result.violations?.join(', ')}`;
+            }
+        } else {
+            reply = `Я получил твоё сообщение в ТГ: "${msg.text}". Мой мозг (${globalBrain.getTokensUsedToday()} использовано).`;
+        }
+        return reply;
+    });
+    tg.start().catch((e) => console.error('[Telegram] Failed to start:', e));
+}
 
 const app = express();
 app.use(cors());
@@ -96,6 +130,47 @@ app.get('/api/memory/search', (req: Request, res: Response) => {
         timestamp: Date.now()
     }).catch(console.error);
     res.json(globalMemory.search(query, 10));
+});
+
+// --- REST API: Chat ---
+app.post('/api/chat', async (req: Request, res: Response) => {
+    const message = req.body.message as string || '';
+
+    kernel.dispatch({
+        type: 'log',
+        source: 'api-gateway',
+        payload: `[Chat] User: "${message}"`,
+        timestamp: Date.now()
+    }).catch(console.error);
+
+    let reply = '';
+    // If it looks like a task (starts with [TASK: )
+    if (message.startsWith('[TASK:')) {
+        const result = globalPipeline.prepare(message);
+        if (result.status === 'success') {
+            reply = `Task "${result.task.name}" is valid and ready for Swarm DAG (Node ID: ${result.nodeId}).`;
+        } else {
+            reply = `Task rejected: ${result.error || result.violations?.join(', ')}`;
+        }
+    } else {
+        // MVP conversational reply using globalMemory and BrainRouter structure
+        try {
+            // Because providers aren't injected with actual keys in MVP yet, we mock the brain fallback
+            const t = globalBrain.getTokensUsedToday();
+            reply = `Я получил твоё сообщение: "${message}". Когнитивный движок работает. Токенов: ${t}.`;
+        } catch (e) {
+            reply = `Error: ${(e as Error).message}`;
+        }
+    }
+
+    kernel.dispatch({
+        type: 'log',
+        source: 'api-gateway',
+        payload: `[Chat] Jarvis: "${reply}"`,
+        timestamp: Date.now()
+    }).catch(console.error);
+
+    res.json({ response: reply });
 });
 
 // --- REST API: Policy Approval Queue ---

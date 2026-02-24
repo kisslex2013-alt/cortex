@@ -15,16 +15,17 @@ import { registerMemoryCommand } from './commands/memory.js';
 import { registerPolicyCommand } from './commands/policy.js';
 import { registerContractsCommand } from './commands/contracts.js';
 import { registerConfigCommand } from './commands/config.js';
+import { registerChatCommand } from './commands/chat.js';
 
 import chalk from 'chalk';
 
 export const JARVIS_BANNER = [
-    "     ██████╗   █████╗ ██████╗ ██╗   ██╗██╗███████╗",
-    "         ██╔╝ ██╔══██╗██╔══██╗██║   ██║██║██╔════╝",
-    "         ██║  ███████║██████╔╝██║   ██║██║███████╗",
-    "    ██   ██║  ██╔══██║██╔══██╗╚██╗ ██╔╝██║╚════██║",
-    "    ╚█████╔╝  ██║  ██║██║  ██║ ╚████╔╝ ██║███████║",
-    "     ╚════╝   ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝╚══════╝"
+  "     ██████╗   █████╗ ██████╗ ██╗   ██╗██╗███████╗",
+  "         ██╔╝ ██╔══██╗██╔══██╗██║   ██║██║██╔════╝",
+  "         ██║  ███████║██████╔╝██║   ██║██║███████╗",
+  "    ██   ██║  ██╔══██║██╔══██╗╚██╗ ██╔╝██║╚════██║",
+  "    ╚█████╔╝  ██║  ██║██║  ██║ ╚████╔╝ ██║███████║",
+  "     ╚════╝   ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝╚══════╝"
 ];
 
 const BANNER = `
@@ -37,10 +38,10 @@ ${chalk.dim('     Cortex Flow / Neural Core / Iron Butler')}
 const program = new Command();
 
 program
-    .name('jarvis')
-    .description('Jarvis AI Assistant CLI')
-    .version('0.1.0')
-    .addHelpText('beforeAll', BANNER);
+  .name('jarvis')
+  .description('Jarvis AI Assistant CLI')
+  .version('0.1.0')
+  .addHelpText('beforeAll', BANNER);
 
 // Phase 1: MVP commands
 registerStartCommand(program);
@@ -56,5 +57,6 @@ registerMemoryCommand(program);
 registerPolicyCommand(program);
 registerContractsCommand(program);
 registerConfigCommand(program);
+registerChatCommand(program);
 
 program.parse();

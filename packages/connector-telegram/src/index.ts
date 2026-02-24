@@ -2,8 +2,8 @@
  * @jarvis/connector-telegram — Telegram Connector
  *
  * Интерфейс для подключения к Telegram через grammY (v1).
- * MVP: заглушка с единым интерфейсом IConnector.
  */
+import { Bot } from 'grammy';
 
 export interface ConnectorMessage {
     id: string;
@@ -28,24 +28,56 @@ export interface IConnector {
 
 export class TelegramConnector implements IConnector {
     name = 'telegram';
+    private bot: Bot;
     private token: string;
     private connected = false;
     private handler: MessageHandler | null = null;
 
     constructor(token: string) {
         this.token = token;
+        this.bot = new Bot(token);
     }
 
     async start(): Promise<void> {
         if (!this.token) throw new Error('Telegram token not provided');
+
+        this.bot.on('message:text', async (ctx) => {
+            if (!this.handler) return;
+
+            const msg: ConnectorMessage = {
+                id: String(ctx.message.message_id),
+                chatId: String(ctx.chat.id),
+                text: ctx.message.text,
+                from: ctx.from?.username || 'user',
+                timestamp: Date.now()
+            };
+
+            try {
+                const reply = await this.handler(msg);
+                if (reply) {
+                    await ctx.reply(reply, { parse_mode: 'Markdown' });
+                }
+            } catch (e) {
+                console.error('[Telegram] Error handling message:', e);
+                await ctx.reply(`Error: ${(e as Error).message}`);
+            }
+        });
+
+        this.bot.start({
+            onStart: (botInfo) => {
+                console.log(`[Telegram] Connector started, bot username: @${botInfo.username}`);
+            }
+        });
+
         this.connected = true;
-        // TODO: Initialize grammY Bot and start polling
-        console.log('[Telegram] Connector started (placeholder)');
     }
 
     async stop(): Promise<void> {
-        this.connected = false;
-        console.log('[Telegram] Connector stopped');
+        if (this.connected) {
+            await this.bot.stop();
+            this.connected = false;
+            console.log('[Telegram] Connector stopped');
+        }
     }
 
     onMessage(handler: MessageHandler): void {
@@ -54,7 +86,7 @@ export class TelegramConnector implements IConnector {
 
     async send(chatId: string, text: string): Promise<void> {
         if (!this.connected) throw new Error('Connector not connected');
-        // TODO: Send via grammY bot.api.sendMessage()
+        await this.bot.api.sendMessage(chatId, text, { parse_mode: 'Markdown' });
         console.log(`[Telegram] → ${chatId}: ${text.slice(0, 50)}...`);
     }
 

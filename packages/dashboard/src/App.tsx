@@ -16,6 +16,7 @@ import { MemoryExplorer } from './components/MemoryExplorer';
 import { HealthWidget } from './components/HealthWidget';
 import { LogsViewer } from './components/LogsViewer';
 import { PolicyWidget } from './components/PolicyWidget';
+import { ChatWidget } from './components/ChatWidget';
 
 function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('jarvis-token'));
@@ -142,9 +143,12 @@ function App() {
             <Card title="Live Memory" value={`${(liveHeap / 1024 / 1024).toFixed(1)} MB`} sub="via WebSocket" />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <SwarmDAG stats={swarmStats} />
-            <MemoryExplorer token={token} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) minmax(400px, 1fr)', gap: '1rem', minHeight: '400px' }}>
+            <ChatWidget token={token} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <SwarmDAG stats={swarmStats} />
+              <MemoryExplorer token={token} />
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1fr) minmax(400px, 2fr)', gap: '1rem' }}>

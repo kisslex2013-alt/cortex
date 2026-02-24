@@ -9,7 +9,9 @@
         "dev": "tsc --watch",
         "clean": "rm -rf dist"
     },
-    "dependencies": {},
+    "dependencies": {
+        "grammy": "^1.40.0"
+    },
     "devDependencies": {
         "typescript": "^5.7.0"
     }

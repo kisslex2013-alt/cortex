@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { createTelegramConnector } from '../index.js';
+import { vi } from 'vitest';
+
+vi.mock('grammy', () => {
+    return {
+        Bot: vi.fn().mockImplementation(() => ({
+            on: vi.fn(),
+            start: vi.fn(),
+            stop: vi.fn(),
+            api: {
+                sendMessage: vi.fn(),
+            },
+        })),
+    };
+});
 
 describe('@jarvis/connector-telegram', () => {
     it('creates connector', () => {

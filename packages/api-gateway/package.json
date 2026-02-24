@@ -11,11 +11,14 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
+        "@jarvis/brain": "workspace:*",
+        "@jarvis/connector-telegram": "workspace:*",
         "@jarvis/core": "workspace:*",
         "@jarvis/memory": "workspace:*",
+        "@jarvis/pipeline": "workspace:*",
+        "@jarvis/sandbox-policy": "workspace:*",
         "@jarvis/swarm": "workspace:*",
         "@jarvis/watchdog": "workspace:*",
-        "@jarvis/sandbox-policy": "workspace:*",
         "cors": "^2.8.5",
         "express": "^4.21.0",
         "jsonwebtoken": "^9.0.3",
