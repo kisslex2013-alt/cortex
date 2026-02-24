@@ -5,7 +5,7 @@ import { createServer, IncomingMessage } from 'http';
 import { parse as parseUrl } from 'url';
 import jwt from 'jsonwebtoken';
 
-import { createKernel } from '@jarvis/core';
+import { createKernel, type KernelEvent } from '@jarvis/core';
 import { SelfCheck, ContextHealthMonitor, HealthDashboard } from '@jarvis/watchdog';
 import { createSwarm } from '@jarvis/swarm';
 import { LongMemory } from '@jarvis/memory';
@@ -20,6 +20,12 @@ const kernel = createKernel({ mode: 'auto' });
 kernel.start().catch(console.error);
 
 const dashboard = new HealthDashboard(new SelfCheck(), new ContextHealthMonitor());
+
+// --- Initialize Global Memory ---
+const globalMemory = new LongMemory();
+globalMemory.add('Jarvis System initialized', 'tech', { confidence: 'high', source: 'system' });
+globalMemory.add('Test fact for demonstration', 'personal', { confidence: 'medium', source: 'dev' });
+globalMemory.add('API Gateway connected to Cortex', 'tech', { confidence: 'high', source: 'gateway' });
 
 const app = express();
 app.use(cors());
@@ -78,14 +84,18 @@ app.get('/api/swarm', (req: Request, res: Response) => {
 
 // --- REST API: Memory ---
 app.get('/api/memory/stats', (req: Request, res: Response) => {
-    const mem = new LongMemory();
-    res.json(mem.stats());
+    res.json(globalMemory.stats());
 });
 
 app.get('/api/memory/search', (req: Request, res: Response) => {
-    const mem = new LongMemory();
     const query = req.query.q as string || '';
-    res.json(mem.search(query, 10));
+    kernel.dispatch({
+        type: 'log',
+        source: 'api-gateway',
+        payload: `[Memory] Search requested: "${query}"`,
+        timestamp: Date.now()
+    }).catch(console.error);
+    res.json(globalMemory.search(query, 10));
 });
 
 // --- REST API: Policy Approval Queue ---
@@ -123,7 +133,36 @@ app.get('/api/doctor', async (req: Request, res: Response) => {
         api: async () => ({ passed: true, details: 'OK' }),
         logic: async () => ({ passed: true, details: 'OK' })
     });
-    res.json(result);
+
+    // Convert to DoctorReport expected by Dashboard
+    const passed = result.filter(r => r.passed).length;
+    const failed = result.filter(r => !r.passed).length;
+
+    const report = {
+        summary: {
+            passed,
+            failed,
+            total: result.length,
+            overallStatus: failed > 0 ? 'critical' : 'healthy'
+        },
+        results: result.reduce((acc, current) => {
+            acc[current.level] = { passed: current.passed, details: current.details };
+            return acc;
+        }, {} as Record<string, { passed: boolean; details: string }>)
+    };
+
+    res.json(report);
+});
+
+// --- REST API: Health ---
+app.get('/api/health', (req: Request, res: Response) => {
+    // Return real HealthDashboard report
+    res.json(dashboard.getFullReport({
+        currentTokens: 25_000,
+        contextVersions: [{ lastUpdated: Date.now() }],
+        memoryUsedBytes: process.memoryUsage().heapUsed,
+        memoryLimitBytes: process.memoryUsage().heapTotal * 1.5,
+    }));
 });
 
 // --- WebSocket API: Metrics & Real Logs ---
@@ -150,6 +189,16 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
 
     console.log('[WS] Authenticated client connected');
 
+    // Emit a startup log so the user immediately sees it in Live Audit Tail
+    setTimeout(() => {
+        kernel.dispatch({
+            type: 'log',
+            source: 'api-gateway',
+            payload: 'Dashboard WS client connected successfully. Live Audit Tail is active.',
+            timestamp: Date.now()
+        }).catch(console.error);
+    }, 500);
+
     // Interval for metrics
     const metricsInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -164,14 +213,14 @@ wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     }, 2000);
 
     // Real logs implementation via Kernel Event Emitter
-    const logHandler = async (e: any): Promise<void> => {
+    const logHandler = async (e: KernelEvent): Promise<void> => {
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'log',
                 data: {
                     timestamp: new Date(e.timestamp || Date.now()).toISOString(),
-                    level: e.level || 'INFO',
-                    message: e.payload?.toString() || JSON.stringify(e.payload) || 'System event'
+                    level: (e.payload as any)?.level || 'INFO',
+                    message: (e.payload as any)?.message || (typeof e.payload === 'string' ? e.payload : JSON.stringify(e.payload)) || 'System event'
                 }
             }));
         }

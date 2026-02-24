@@ -53,5 +53,45 @@ export function registerDoctorCommand(program: Command): void {
                     : '🔴';
             console.log(`  ${chalk.bold('Overall:')} ${overallIcon} ${report.overallHealth}`);
             console.log();
+
+            // API Gateway Check
+            console.log(chalk.bold('🌐 API Gateway Check\n'));
+            try {
+                // Try to get token with default credentials
+                const authRes = await fetch('http://localhost:4000/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: 'admin' })
+                });
+
+                if (!authRes.ok) {
+                    console.log(`  ${chalk.red('❌')} API Auth failed (${authRes.status})`);
+                } else {
+                    const { token } = await authRes.json() as { token: string };
+
+                    // Check Status
+                    const statusRes = await fetch('http://localhost:4000/api/status', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (statusRes.ok) {
+                        console.log(`  ${chalk.green('✅')} API /api/status Ok`);
+                    } else {
+                        console.log(`  ${chalk.red('❌')} API /api/status Failed`);
+                    }
+
+                    // Check Health
+                    const healthRes = await fetch('http://localhost:4000/api/health', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (healthRes.ok) {
+                        console.log(`  ${chalk.green('✅')} API /api/health Ok`);
+                    } else {
+                        console.log(`  ${chalk.red('❌')} API /api/health Failed`);
+                    }
+                }
+            } catch {
+                console.log(`  ${chalk.yellow('🟡')} API Gateway unreachable (is it running?)`);
+            }
+            console.log();
         });
 }

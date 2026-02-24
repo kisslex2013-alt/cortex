@@ -188,7 +188,7 @@
 - [x] Подключить `/api/policy/approve/:id` к `Coordinator.policyGuard` callback
 - [x] WebSocket Logs — подключить к `kernel.on('log', handler)` вместо `setInterval`
 - [x] Добавить GitHub Actions CI: lint + test + build на PR
-- [ ] `jarvis doctor` проверяет endpoint `/api/status` и `/api/health` (будет в v1.7)
+- [x] `jarvis doctor` проверяет endpoint `/api/status` и `/api/health` 
 
 **Критерии:**
 - 0 моков в security-критическом пути (Auth / Policy) ✅
