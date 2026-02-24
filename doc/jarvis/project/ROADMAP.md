@@ -137,23 +137,30 @@
 
 ## v1.5 — CLI / Dashboard / Branding
 
-### v1.5 — CLI / Dashboard / Branding (🟢 Complete)
+### v1.5 — CLI / Dashboard / Branding (🟡 In Progress)
+
+> **DoD Note:** Dashboard scaffold и CLI-команды запущены и используют реальные данные ядра.
+> Auth, Policy Approve и WS Logs остаются моками до v1.6 — это явно допустимо по итерационному плану.
+> Подробно: [MVP_LIMITATIONS.md](MVP_LIMITATIONS.md)
 
 **CLI: Тонкий wrapper над core API**
-- [x] Phase 1: `jarvis start/stop/status/doctor` (MVP)
-- [x] Phase 2: `jarvis swarm/memory` (Интроспекция)
+- [x] Phase 1: `jarvis start/stop/status/doctor` (MVP) — реальные вызовы ядра
+- [x] Phase 2: `jarvis swarm/memory` (Интроспекция) — реальные данные
 - [x] Phase 3: `jarvis mode/approve/contracts/logs/config` (Управление)
+- [x] `kernel.getStatus()` используется в CLI и API Gateway ✅
 
 **Dashboard: Веб-интерфейс для мониторинга**
-- [x] React SPA (Vite) + Tailwind/CSS
-- [x] API Gateway (Express/Fastify) как прослойка к Core API
-- [x] Спринт 1: Status (mode, uptime, tokens)
-- [x] Спринт 2: Swarm DAG (D3.js), Memory explorer
-- [x] Спринт 3: Health (Doctor API), Policy (approve/reject), Live Logs
-- [x] Спринт 4: Auth (ключи, роли), dark theme
+- [x] React SPA (Vite) + CSS
+- [x] API Gateway (Express) как прослойка к Core API
+- [x] Спринт 1: Status (mode, uptime, tokens) — реальный `kernel.getStatus()`
+- [x] Спринт 2: Swarm DAG (D3.js), Memory explorer — реальный `coordinator.stats()`
+- [x] Спринт 3: Health (Doctor API `/api/health`) — реальный `HealthDashboard.getFullReport()`
+- [x] Спринт 3b: Policy (approve/reject) — Интегрирован с `sandbox-policy`
+- [x] Спринт 3c: Live WS Logs — Реализовано через `kernel.on('log')`
+- [x] Спринт 4: Auth (JWT реальный) — Реализовано
 
 **Branding: Визуальная идентичность**
-- [x] Документ `BRANDING.md` с описанием 3х концепций (Neural Core, Iron Butler, Cortex Flow)
+- [x] Документ `BRANDING.md`
 - [x] Цветовая палитра: dark mode + cyan/green акценты
 - [x] Стилизованный ASCII-баннер для CLI
 
@@ -161,12 +168,31 @@
 
 ### Критерии готовности v1.5
 
-| Метрика | Порог |
-|---------|-------|
-| CLI: 15 команд работают | ✅ |
-| Dashboard: 5 страниц, все API подключены | ✅ |
-| Dashboard API: авторизация | ✅ |
+| Метрика | Статус |
+|---------|---------|
+| CLI: команды используют реальный Core API | ✅ |
+| Dashboard: Status/Swarm/Memory/Health — реальные данные | ✅ |
+| Auth / Policy approve / WS Logs | ✅ (Реализовано в v1.6) |
+| Kernel API: getStatus/setMode/reloadConfig | ✅ |
+| Тесты зеленые, 0 lint ошибок | ✅ |
 | 0 бизнес-логики в CLI/Dashboard | ✅ |
+
+---
+
+## v1.6 — Auth, Policy Wiring, Real WS Logs
+
+**Цель:** Снять оставшиеся моки из v1.5. Подключить реальные механизмы безопасности и авторизации к UI.
+
+- [x] Реализовать JWT Auth (реальный секрет + expiry + роли)
+- [x] Подключить `/api/policy/pending` к `sandbox-policy` — реальная очередь апрувов
+- [x] Подключить `/api/policy/approve/:id` к `Coordinator.policyGuard` callback
+- [x] WebSocket Logs — подключить к `kernel.on('log', handler)` вместо `setInterval`
+- [x] Добавить GitHub Actions CI: lint + test + build на PR
+- [ ] `jarvis doctor` проверяет endpoint `/api/status` и `/api/health` (будет в v1.7)
+
+**Критерии:**
+- 0 моков в security-критическом пути (Auth / Policy) ✅
+- CI: каждый PR проходит lint + test + build ✅
 
 ---
 

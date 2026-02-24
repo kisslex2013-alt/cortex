@@ -1,0 +1,12 @@
+{
+  "skill_id": "molt-market",
+  "timestamp": "2026-02-19T14:15:28.654Z",
+  "checks": {
+    "manifest_exists": true,
+    "credentials_safe": true,
+    "scripts_isolated": true,
+    "isnad_chain": "pending (requires Moltbook identity v2)"
+  },
+  "trust_score": 100,
+  "verdict": "VERIFIED"
+}

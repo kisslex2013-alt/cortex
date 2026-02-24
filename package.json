@@ -11,7 +11,7 @@
     "build": "pnpm -r run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint packages/*/src/**/*.ts",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
     "clean": "pnpm -r run clean"
   },
   "devDependencies": {

@@ -6,13 +6,13 @@ interface LogMessage {
     message: string;
 }
 
-export function LogsViewer() {
+export function LogsViewer({ token }: { token: string }) {
     const [logs, setLogs] = useState<LogMessage[]>([]);
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//localhost:4000`;
+        const wsUrl = `${wsProtocol}//localhost:4000?token=${token}`;
         const ws = new WebSocket(wsUrl);
 
         ws.onmessage = (event) => {
@@ -26,7 +26,7 @@ export function LogsViewer() {
                         return newLogs;
                     });
                 }
-            } catch (e) {
+            } catch {
                 // ignore
             }
         };

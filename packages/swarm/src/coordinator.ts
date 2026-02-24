@@ -16,7 +16,7 @@ export interface CoordinatorConfig {
     cpuThreshold?: number;
     totalBudget?: number;
     /** B2: policy guard — assess() вызывается перед spawn. (policy → swarm) */
-    policyGuard?: (action: string, target: string) => { approved: boolean; reason: string };
+    policyGuard?: (action: string, target: string) => Promise<{ approved: boolean; reason: string }>;
     /** B1: карта проекта (memory → shared context) */
     codebaseMapSummary?: string;
 }
@@ -36,7 +36,7 @@ export class Coordinator {
     readonly context: SharedContext;
     readonly scheduler: Scheduler;
 
-    private policyGuard?: (action: string, target: string) => { approved: boolean; reason: string };
+    private policyGuard?: (action: string, target: string) => Promise<{ approved: boolean; reason: string }>;
 
     constructor(taskDescription: string, config?: CoordinatorConfig) {
         this.dag = new TaskDAG(config?.maxDepth ?? 3, config?.maxNodes ?? 10);
@@ -81,7 +81,7 @@ export class Coordinator {
             const promises = batch.map(async (node) => {
                 // B2: policy guard
                 if (this.policyGuard) {
-                    const decision = this.policyGuard('spawn_agent', node.role);
+                    const decision = await this.policyGuard('spawn_agent', node.role);
                     if (!decision.approved) {
                         this.scheduler.failAgent(node.id, `Policy denied: ${decision.reason}`);
                         return;

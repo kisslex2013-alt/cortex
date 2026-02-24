@@ -1,11 +1,21 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
-import { createServer } from 'http';
+import { createServer, IncomingMessage } from 'http';
+import { parse as parseUrl } from 'url';
+import jwt from 'jsonwebtoken';
+
 import { createKernel } from '@jarvis/core';
 import { SelfCheck, ContextHealthMonitor, HealthDashboard } from '@jarvis/watchdog';
+import { createSwarm } from '@jarvis/swarm';
+import { LongMemory } from '@jarvis/memory';
+import { globalApprovalQueue } from '@jarvis/sandbox-policy';
 
-// Initialize Jarvis core objects
+// --- Configuration ---
+const JWT_SECRET = process.env.JWT_SECRET || 'jarvis-dev-secret-42';
+const PORT = process.env.PORT || 4000;
+
+// --- Initialize Core ---
 const kernel = createKernel({ mode: 'auto' });
 kernel.start().catch(console.error);
 
@@ -13,27 +23,45 @@ const dashboard = new HealthDashboard(new SelfCheck(), new ContextHealthMonitor(
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
-// --- REST API ---
+// --- REST Auth Middleware ---
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        jwt.verify(token, JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+};
 
-app.get('/api/status', async (req: Request, res: Response) => {
-    const config = kernel.getConfig();
-    const isRunning = kernel.isRunning();
+// --- REST API: Auth ---
+app.post('/api/auth', (req: Request, res: Response) => {
+    const { password } = req.body;
+    // MVP: password-based local auth
+    if (password === 'admin') {
+        const token = jwt.sign({ user: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+        res.json({ token, user: 'admin' });
+    } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
+});
 
-    // Demo metrics for now
-    res.json({
-        name: config.name,
-        version: config.version,
-        mode: config.mode,
-        running: isRunning,
-        pluginCount: kernel.getPluginNames().length,
-        budgetPerHour: config.tokenBudget.maxPerHour,
-        uptimeSeconds: process.uptime()
-    });
+// Protect all following routes
+app.use('/api', requireAuth);
+
+// --- REST API: Core & Swarm ---
+app.get('/api/status', (req: Request, res: Response) => {
+    res.json(kernel.getStatus());
 });
 
 app.get('/api/health', (req: Request, res: Response) => {
-    // Generate a health report
     const report = dashboard.getFullReport({
         currentTokens: 5000,
         contextVersions: [],
@@ -43,12 +71,15 @@ app.get('/api/health', (req: Request, res: Response) => {
     res.json(report);
 });
 
-import { createSwarm } from '@jarvis/swarm';
-import { LongMemory } from '@jarvis/memory';
-
 app.get('/api/swarm', (req: Request, res: Response) => {
     const coordinator = createSwarm('status-check');
     res.json(coordinator.stats());
+});
+
+// --- REST API: Memory ---
+app.get('/api/memory/stats', (req: Request, res: Response) => {
+    const mem = new LongMemory();
+    res.json(mem.stats());
 });
 
 app.get('/api/memory/search', (req: Request, res: Response) => {
@@ -57,33 +88,33 @@ app.get('/api/memory/search', (req: Request, res: Response) => {
     res.json(mem.search(query, 10));
 });
 
-app.post('/api/auth', express.json(), (req: Request, res: Response) => {
-    // В MVP: простая мок-авторизация без реальной привязки к ключам ядра
-    const { password } = req.body;
-    if (password === 'admin') {
-        res.json({ token: 'mock-jwt-token-123', user: 'admin' });
-    } else {
-        res.status(401).json({ error: 'Invalid credentials' });
-    }
-});
-
-app.get('/api/memory/stats', (req: Request, res: Response) => {
-    const mem = new LongMemory();
-    res.json(mem.stats());
-});
-
+// --- REST API: Policy Approval Queue ---
 app.get('/api/policy/pending', (req: Request, res: Response) => {
-    res.json([
-        { id: 'act_101', risk: 'HIGH', operation: 'file_delete', target: 'src/core/auth.ts', reason: 'Deleting core authentication module' },
-        { id: 'act_102', risk: 'MEDIUM', operation: 'system_modify', target: 'process.env', reason: 'Modifying environment variables' }
-    ]);
+    // Return items from sandbox-policy's global queue
+    res.json(globalApprovalQueue.getPending());
 });
 
 app.post('/api/policy/approve/:id', (req: Request, res: Response) => {
-    // В MVP: просто возвращаем success
-    res.json({ success: true, id: req.params.id, status: 'approved' });
+    const { id } = req.params;
+    const success = globalApprovalQueue.approve(id);
+    if (!success) {
+        res.status(404).json({ error: 'Request not found or already processed' });
+        return;
+    }
+    res.json({ success: true, id, status: 'approved' });
 });
 
+app.post('/api/policy/reject/:id', (req: Request, res: Response) => {
+    const { id } = req.params;
+    const success = globalApprovalQueue.reject(id);
+    if (!success) {
+        res.status(404).json({ error: 'Request not found or already processed' });
+        return;
+    }
+    res.json({ success: true, id, status: 'rejected' });
+});
+
+// --- REST API: Doctor ---
 app.get('/api/doctor', async (req: Request, res: Response) => {
     const sc = new SelfCheck();
     const result = await sc.runAll({
@@ -95,13 +126,29 @@ app.get('/api/doctor', async (req: Request, res: Response) => {
     res.json(result);
 });
 
-// --- WebSocket API ---
+// --- WebSocket API: Metrics & Real Logs ---
 
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-wss.on('connection', (ws: WebSocket) => {
-    console.log('[WS] Client connected');
+// Verify token on upgrade / connection
+wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+    const parsedUrl = parseUrl(req.url || '', true);
+    const token = parsedUrl.query.token as string;
+
+    if (!token) {
+        ws.close(1008, 'Token required');
+        return;
+    }
+
+    try {
+        jwt.verify(token, JWT_SECRET);
+    } catch {
+        ws.close(1008, 'Invalid token');
+        return;
+    }
+
+    console.log('[WS] Authenticated client connected');
 
     // Interval for metrics
     const metricsInterval = setInterval(() => {
@@ -116,30 +163,29 @@ wss.on('connection', (ws: WebSocket) => {
         }
     }, 2000);
 
-    // Mock logs simulation instead of hooking into core events for this sprint
-    const logsInterval = setInterval(() => {
+    // Real logs implementation via Kernel Event Emitter
+    const logHandler = async (e: any): Promise<void> => {
         if (ws.readyState === WebSocket.OPEN) {
-            const levels = ['INFO', 'WARN', 'DEBUG'];
-            const level = levels[Math.floor(Math.random() * levels.length)];
             ws.send(JSON.stringify({
                 type: 'log',
                 data: {
-                    timestamp: new Date().toISOString(),
-                    level,
-                    message: `System event: ${Math.random().toString(36).substring(7)} processed.`
+                    timestamp: new Date(e.timestamp || Date.now()).toISOString(),
+                    level: e.level || 'INFO',
+                    message: e.payload?.toString() || JSON.stringify(e.payload) || 'System event'
                 }
             }));
         }
-    }, 3000);
+    };
+
+    kernel.on('log', logHandler);
 
     ws.on('close', () => {
         console.log('[WS] Client disconnected');
         clearInterval(metricsInterval);
-        clearInterval(logsInterval);
+        kernel.off('log', logHandler);
     });
 });
 
-const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
     console.log(`🚀 API Gateway running on http://localhost:${PORT}`);
     console.log(`🔌 WebSocket server listening on ws://localhost:${PORT}`);

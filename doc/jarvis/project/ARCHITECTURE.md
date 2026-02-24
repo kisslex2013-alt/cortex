@@ -2,7 +2,7 @@
 
 ## Обзор
 
-Jarvis — модульная система из 12 packages в pnpm-monorepo. Каждый пакет — изолированный модуль с чёткой ответственностью. Включает нативную поддержку роя агентов (Swarm Runtime).
+Jarvis — модульная система из 14 packages в pnpm-monorepo. Каждый пакет — изолированный модуль с чёткой ответственностью. Включает нативную поддержку роя агентов (Swarm Runtime).
 
 ## Компоненты
 
@@ -30,7 +30,7 @@ const result = await brain.think(prompt, { complexity: 8 });
 - **Daily Budget** — распределение лимитов по времени суток
 - **Universal LLM Gateway** — единый registry провайдеров (`LLMGateway`), поддержка форматов: `openai`, `google`, `anthropic`, `custom`. Хелперы: `makeGeminiProvider()`, `makeOpenAIProvider()`. Позволяет подключить любой LLM без изменения бизнес-логики.
 
-**Источник:** [model_cascade_router.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/survival/model_cascade_router.js)
+**Источник:** [model_cascade_router.js](../../../source/scripts/survival/model_cascade_router.js)
 
 ### 3. Memory (`packages/memory`)
 
@@ -54,7 +54,7 @@ const result = await brain.think(prompt, { complexity: 8 });
 - `toSummary()` — компактный формат для LLM (📁/📄 + exports + deps)
 - `stats()` — files/directories/totalLines
 
-**Источники:** [mem0_bridge.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/evolution/mem0_bridge.js), [rag_retriever.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/evolution/rag_retriever.js)
+**Источники:** [mem0_bridge.js](../../../source/scripts/evolution/mem0_bridge.js), [rag_retriever.js](../../../source/scripts/evolution/rag_retriever.js)
 
 ### 4. Policy Engine (`packages/policy`)
 
@@ -93,7 +93,7 @@ HIGH (deploy, secrets, system)   → human approval required
 - Memory DB locked → in-memory cache + retry с backoff
 - Connector disconnected → queue messages + auto-reconnect
 
-**Источник:** [sandbox_guard.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/survival/sandbox_guard.js)
+**Источник:** [sandbox_guard.js](../../../source/scripts/survival/sandbox_guard.js)
 
 ### 6. Audit (`packages/audit`)
 
@@ -114,7 +114,7 @@ Self-healing:
 - **Crash Loop Protection** — если падает N раз → откат к стабильной версии
 - **Safe Mode** — отключение всего, кроме связи и жизнеобеспечения
 
-**Источники:** [watchdog.py](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/survival/watchdog.py), [heartbeat_runner.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/survival/heartbeat_runner.js)
+**Источники:** [watchdog.py](../../../source/scripts/survival/watchdog.py), [heartbeat_runner.js](../../../source/scripts/survival/heartbeat_runner.js)
 
 ### 8. Connectors (`packages/connectors`)
 
@@ -131,7 +131,7 @@ Self-healing:
 - **Scanner** — статический анализ на red flags (malicious patterns)
 - **Version Manager** — семантические версии, совместимость
 
-**Источник:** [skill_scanner.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/survival/skill_scanner.js)
+**Источник:** [skill_scanner.js](../../../source/scripts/survival/skill_scanner.js)
 
 ### 10. Evolution (`packages/evolution`)
 
@@ -145,7 +145,7 @@ GAP DETECTED → RESEARCH → PLAN → GENERATE → TEST → SANDBOX → PROPOSE
 - **Self-Refactor** — автоматический рефакторинг через Git (propose → test → apply)
 - **Learning Pipeline** — обучение из ошибок с approval gates
 
-**Источники:** [self_audit.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/evolution/self_audit.js), [self_refactor.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/evolution/self_refactor.js), [evolution_loop.js](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/source/scripts/evolution/evolution_loop.js)
+**Источники:** [self_audit.js](../../../source/scripts/evolution/self_audit.js), [self_refactor.js](../../../source/scripts/evolution/self_refactor.js), [evolution_loop.js](../../../source/scripts/evolution/evolution_loop.js)
 
 ### 11. Proactivity (v1+)
 
@@ -153,7 +153,7 @@ GAP DETECTED → RESEARCH → PLAN → GENERATE → TEST → SANDBOX → PROPOSE
 - **Empathy Engine** — оценка доступности пользователя по метаданным
 - **Anti-spam** — cooldowns, scoring (>7), timing checks, "не беспокоить"
 
-**Источник:** [JARVIS_PROACTIVE_PARTNER](file:///h:/Backup/Zero-Coding/Antigravity/Cortex/doc/research/JARVIS_PROACTIVE_PARTNER.md)
+**Источник:** [JARVIS_PROACTIVE_PARTNER](../../../source/research/JARVIS_PROACTIVE_PARTNER.md)
 
 ### 12. Agent Swarm Runtime (`packages/swarm`)
 

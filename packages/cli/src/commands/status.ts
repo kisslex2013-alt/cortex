@@ -12,17 +12,17 @@ export function registerStatusCommand(program: Command): void {
         .description('Show Jarvis status')
         .action(() => {
             const kernel = createKernel();
-            const config = kernel.getConfig();
+            const status = kernel.getStatus();
 
             console.log(chalk.bold('\n📊 Jarvis Status\n'));
 
-            const rows = [
-                ['Name', config.name],
-                ['Version', config.version],
-                ['Mode', config.mode],
-                ['Running', kernel.isRunning() ? chalk.green('Yes') : chalk.yellow('No')],
-                ['Plugins', String(kernel.getPluginNames().length)],
-                ['Token Budget', `${config.tokenBudget.maxPerHour}/hr`],
+            const rows: [string, string][] = [
+                ['Name', status.name],
+                ['Version', status.version],
+                ['Mode', status.mode],
+                ['Running', status.running ? chalk.green('Yes') : chalk.yellow('No')],
+                ['Plugins', String(status.pluginCount)],
+                ['Uptime', `${status.uptimeSeconds.toFixed(1)}s`],
             ];
 
             for (const [key, value] of rows) {

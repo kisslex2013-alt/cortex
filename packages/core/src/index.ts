@@ -64,6 +64,17 @@ export class Kernel {
         this.handlers.set(eventType, existing);
     }
 
+    /** Unsubscribe from events */
+    off(eventType: string, handler: EventHandler): void {
+        const existing = this.handlers.get(eventType);
+        if (existing) {
+            const index = existing.indexOf(handler);
+            if (index > -1) {
+                existing.splice(index, 1);
+            }
+        }
+    }
+
     /** Dispatch an event to all subscribers */
     async dispatch(event: KernelEvent): Promise<void> {
         const handlers = this.handlers.get(event.type) ?? [];
@@ -113,6 +124,27 @@ export class Kernel {
 
     getPluginNames(): string[] {
         return [...this.plugins.keys()];
+    }
+
+    getStatus() {
+        return {
+            name: this.config.name,
+            version: this.config.version,
+            mode: this.config.mode,
+            running: this.running,
+            pluginCount: this.plugins.size,
+            uptimeSeconds: process.uptime()
+        };
+    }
+
+    setMode(mode: 'minimal' | 'standard' | 'free_time' | 'auto') {
+        this.config.mode = mode;
+        console.log(`[Kernel] Mode changed to: ${mode}`);
+    }
+
+    reloadConfig(newConfig: Partial<JarvisConfig>) {
+        this.config = { ...this.config, ...newConfig };
+        console.log(`[Kernel] Configuration reloaded`);
     }
 }
 

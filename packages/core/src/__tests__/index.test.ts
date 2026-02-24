@@ -56,4 +56,30 @@ describe('@jarvis/core', () => {
         const health = await kernel.healthCheck();
         expect(health.get('p1')).toBe(true);
     });
+
+    it('getStatus returns structured status object', async () => {
+        const kernel = createKernel({ name: 'TestKernel', mode: 'minimal' });
+        await kernel.start();
+        const status = kernel.getStatus();
+        expect(status.name).toBe('TestKernel');
+        expect(status.mode).toBe('minimal');
+        expect(status.running).toBe(true);
+        expect(status.pluginCount).toBe(0);
+        expect(typeof status.uptimeSeconds).toBe('number');
+        await kernel.stop();
+    });
+
+    it('setMode changes kernel mode', () => {
+        const kernel = createKernel({ mode: 'auto' });
+        expect(kernel.getStatus().mode).toBe('auto');
+        kernel.setMode('standard');
+        expect(kernel.getStatus().mode).toBe('standard');
+    });
+
+    it('reloadConfig merges config changes', () => {
+        const kernel = createKernel({ name: 'Before' });
+        expect(kernel.getStatus().name).toBe('Before');
+        kernel.reloadConfig({ name: 'After' });
+        expect(kernel.getStatus().name).toBe('After');
+    });
 });

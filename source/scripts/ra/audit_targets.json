@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-02-19T14:15:11.956Z",
+  "targets": [
+    {
+      "id": "molt-market",
+      "type": "skill",
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "id": "reputation-engine",
+      "type": "core_module",
+      "priority": "critical",
+      "status": "pending"
+    }
+  ]
+}

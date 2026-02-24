@@ -11,7 +11,7 @@ interface StatusResponse {
   uptimeSeconds: number;
 }
 
-import { SwarmDAG } from './components/SwarmDAG';
+import { SwarmDAG, type SwarmStats } from './components/SwarmDAG';
 import { MemoryExplorer } from './components/MemoryExplorer';
 import { HealthWidget } from './components/HealthWidget';
 import { LogsViewer } from './components/LogsViewer';
@@ -23,7 +23,7 @@ function App() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [status, setStatus] = useState<StatusResponse | null>(null);
-  const [swarmStats, setSwarmStats] = useState<any>(null);
+  const [swarmStats, setSwarmStats] = useState<SwarmStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [liveHeap, setLiveHeap] = useState<number>(0);
 
@@ -43,7 +43,7 @@ function App() {
       } else {
         setLoginError(data.error || 'Login failed');
       }
-    } catch (err) {
+    } catch {
       setLoginError('Connection error');
     }
   };
@@ -80,7 +80,7 @@ function App() {
 
     // Connect to WebSocket for live metrics
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//localhost:4000`;
+    const wsUrl = `${wsProtocol}//localhost:4000?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onmessage = (event) => {
@@ -89,7 +89,7 @@ function App() {
         if (msg.type === 'metrics') {
           setLiveHeap(msg.data.heapUsed);
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
     };
@@ -144,13 +144,13 @@ function App() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <SwarmDAG stats={swarmStats} />
-            <MemoryExplorer />
+            <MemoryExplorer token={token} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1fr) minmax(400px, 2fr)', gap: '1rem' }}>
-            <HealthWidget />
-            <PolicyWidget />
-            <LogsViewer />
+            <HealthWidget token={token} />
+            <PolicyWidget token={token} />
+            <LogsViewer token={token} />
           </div>
         </div>
       ) : (

@@ -1,0 +1,6 @@
+[Unit]
+Description=Jarvis AI Physician (Emergency Recovery)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /root/.openclaw/workspace/scripts/survival/ai_doctor.py

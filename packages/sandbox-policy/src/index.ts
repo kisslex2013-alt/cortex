@@ -219,3 +219,66 @@ export function shouldAskUser(ctx: ClarificationContext): {
     };
 }
 
+// --- Policy Approval Queue ---
+
+export interface PendingApproval {
+    id: string;
+    risk: RiskLevel;
+    operation: string;
+    target: string;
+    reason: string;
+    timestamp: number;
+}
+
+export class ApprovalQueue {
+    private queue: PendingApproval[] = [];
+    private resolutions = new Map<string, { approved: boolean; resolvedAt: number }>();
+
+    /** Добавить запрос в очередь */
+    add(request: Omit<PendingApproval, 'id' | 'timestamp'>): string {
+        const id = `req_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        this.queue.push({
+            ...request,
+            id,
+            timestamp: Date.now(),
+        });
+        return id;
+    }
+
+    /** Получить все ожидающие запросы */
+    getPending(): PendingApproval[] {
+        return [...this.queue];
+    }
+
+    /** Одобрить запрос */
+    approve(id: string): boolean {
+        const index = this.queue.findIndex(q => q.id === id);
+        if (index === -1) return false;
+
+        this.queue.splice(index, 1);
+        this.resolutions.set(id, { approved: true, resolvedAt: Date.now() });
+        return true;
+    }
+
+    /** Отклонить запрос */
+    reject(id: string): boolean {
+        const index = this.queue.findIndex(q => q.id === id);
+        if (index === -1) return false;
+
+        this.queue.splice(index, 1);
+        this.resolutions.set(id, { approved: false, resolvedAt: Date.now() });
+        return true;
+    }
+
+    /** Проверить статус запроса */
+    checkStatus(id: string): 'pending' | 'approved' | 'rejected' | 'unknown' {
+        if (this.queue.some(q => q.id === id)) return 'pending';
+        const resolution = this.resolutions.get(id);
+        if (!resolution) return 'unknown';
+        return resolution.approved ? 'approved' : 'rejected';
+    }
+}
+
+// Выставляем глобальный инстанс очереди для простого доступа в рамках текущего Node процесса
+export const globalApprovalQueue = new ApprovalQueue();
+

@@ -1,0 +1,12 @@
+[Unit]
+Description=Jarvis Telegram Outbox Courier
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /root/.openclaw/workspace/scripts/survival/courier.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

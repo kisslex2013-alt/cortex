@@ -10,11 +10,11 @@ interface DoctorReport {
     results: Record<string, { passed: boolean; details: string }>;
 }
 
-export function HealthWidget() {
+export function HealthWidget({ token }: { token: string }) {
     const [report, setReport] = useState<DoctorReport | null>(null);
 
     useEffect(() => {
-        fetch('/api/doctor')
+        fetch('/api/doctor', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(setReport)
             .catch(console.error);

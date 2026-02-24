@@ -12,16 +12,19 @@
     },
     "dependencies": {
         "@jarvis/core": "workspace:*",
-        "@jarvis/watchdog": "workspace:*",
-        "@jarvis/swarm": "workspace:*",
         "@jarvis/memory": "workspace:*",
-        "express": "^4.21.0",
+        "@jarvis/swarm": "workspace:*",
+        "@jarvis/watchdog": "workspace:*",
+        "@jarvis/sandbox-policy": "workspace:*",
         "cors": "^2.8.5",
+        "express": "^4.21.0",
+        "jsonwebtoken": "^9.0.3",
         "ws": "^8.18.0"
     },
     "devDependencies": {
-        "@types/express": "^4.17.21",
         "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/jsonwebtoken": "^9.0.10",
         "@types/ws": "^8.5.12",
         "typescript": "^5.7.0"
     }

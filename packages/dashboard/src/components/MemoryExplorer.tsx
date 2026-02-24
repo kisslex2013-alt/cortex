@@ -17,13 +17,13 @@ interface SearchResult {
     relevance: number;
 }
 
-export function MemoryExplorer() {
+export function MemoryExplorer({ token }: { token: string }) {
     const [stats, setStats] = useState<MemoryStat | null>(null);
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult[]>([]);
 
     useEffect(() => {
-        fetch('/api/memory/stats')
+        fetch('/api/memory/stats', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(setStats)
             .catch(console.error);
@@ -32,7 +32,9 @@ export function MemoryExplorer() {
     const handleSearch = async () => {
         if (!query.trim()) return;
         try {
-            const res = await fetch(`/api/memory/search?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/memory/search?q=${encodeURIComponent(query)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             const data = await res.json();
             setResults(data);
         } catch (e) {

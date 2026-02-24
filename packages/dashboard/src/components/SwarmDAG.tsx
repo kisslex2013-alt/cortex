@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
-interface SwarmStats {
+export interface SwarmStats {
     dag: {
         total: number;
         pending: number;

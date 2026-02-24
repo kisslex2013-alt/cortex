@@ -18,7 +18,50 @@
     "exclude": [
         "node_modules",
         "dist",
-        "packages",
         "jarvis-core"
+    ],
+    "references": [
+        {
+            "path": "./packages/api-gateway"
+        },
+        {
+            "path": "./packages/brain"
+        },
+        {
+            "path": "./packages/cli"
+        },
+        {
+            "path": "./packages/connector-telegram"
+        },
+        {
+            "path": "./packages/core"
+        },
+        {
+            "path": "./packages/dashboard"
+        },
+        {
+            "path": "./packages/memory"
+        },
+        {
+            "path": "./packages/metrics"
+        },
+        {
+            "path": "./packages/pipeline"
+        },
+        {
+            "path": "./packages/sandbox-policy"
+        },
+        {
+            "path": "./packages/shared-types"
+        },
+        {
+            "path": "./packages/skills"
+        },
+        {
+            "path": "./packages/swarm"
+        },
+        {
+            "path": "./packages/watchdog"
+        }
     ]
 }

@@ -8,12 +8,12 @@ interface PendingAction {
     reason: string;
 }
 
-export function PolicyWidget() {
+export function PolicyWidget({ token }: { token: string }) {
     const [actions, setActions] = useState<PendingAction[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetch('/api/policy/pending')
+        fetch('/api/policy/pending', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(setActions)
             .catch(console.error);
@@ -22,7 +22,10 @@ export function PolicyWidget() {
     const handleApprove = async (id: string) => {
         setLoading(true);
         try {
-            await fetch(`/api/policy/approve/${id}`, { method: 'POST' });
+            await fetch(`/api/policy/approve/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             setActions(prev => prev.filter(a => a.id !== id));
         } catch (e) {
             console.error(e);

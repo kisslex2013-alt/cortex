@@ -2,45 +2,33 @@
 
 > Автономный AI-ассистент с роем агентов, многоуровневой памятью и Policy Engine.
 
-## Архитектура
+## Что уже работает (v1.5+ MVP)
 
-**8 пакетов** в pnpm-monorepo:
+- **14 Core Packages** в едином `pnpm` monorepo (Brain, Swarm, Policy, Core, Memory, CLI, Dashboard и другие).
+- **Universal LLM Gateway**: Подключены OpenAI, Google, Anthropic с логикой каскадного отката (fallback logic).
+- **Swarm DAG Engine**: Выполнение композитных задач силами 20+ агентов.
+- **Инфраструктура Интерфейсов**: 
+  - Развитый **CLI** (15+ команд, пайплайн отладки).
+  - Web **Dashboard** (Vite + React) для трекинга DAG, просмотра логов, live memory, и политик безопасности (Approval Gates).
+- **Security & Sandboxing**: Риск-мониторинг (`@jarvis/sandbox-policy`), блокировка опасных команд, аудит-логирование.
+- **Stable Tooling**: 139+ зеленых Unit Тестов, полное покрытие ESLint, TypeScript Project References.
 
-| Пакет | Назначение |
-|-------|-----------|
-| `@jarvis/core` | Event Loop, Plugin Loader, Config Manager |
-| `@jarvis/brain` | LLM Router (7+ провайдеров) + LLM Gateway |
-| `@jarvis/memory` | Fast/Long/Vector Memory + CodebaseMapper |
-| `@jarvis/swarm` | Agent Swarm Runtime (20 ролей, DAG, Contracts) |
-| `@jarvis/watchdog` | Self-Healing, SelfCheck, Context Health Monitor |
-| `@jarvis/sandbox-policy` | Risk Engine, Approval Table, Clarification Module |
-| `@jarvis/skills` | SKILL.md, SkillLifecycle (DO Framework), StructuredTask |
-| `@jarvis/connector-telegram` | Telegram connector (grammY) |
+## Что дальше (Roadmap v2.0+)
 
-## Data Flow
+- **Умное Кодирование**: Интеграция MCP (Model Context Protocol) для семантического поиска и работы с контекстом прямо в IDE.
+- **Масштабирование Swarm**: Параллельное выполнение графов, сложный split контекстов.
+- **Knowledge Graph**: Замена линейной памяти на глубокие древовидные графы событий.
+- **Активность**: Модуль "JARVIS_PROACTIVE_PARTNER", инициирующий задачи фоном без прямого запроса пользователя.
 
-```
-User → Connector → Core(Event) → Policy(risk?) → Brain(LLM+RAG) → Sandbox(exec) → Audit(log) → User
-```
-
-## Quick Start
+## Быстрый старт
 
 ```bash
 pnpm install    # установка зависимостей
 pnpm build      # компиляция TypeScript
-pnpm test       # 113 тестов (8/8 файлов)
-pnpm lint       # ESLint проверка
+pnpm test       # запуск 139+ тестов
+pnpm lint       # полная проверка кодовой базы (включая frontend .tsx)
+docker compose up # поднятие Dashboard + Gateway в контейнерах
 ```
-
-## Swarm Runtime
-
-20 ролей агентов работают как **рой** (не N независимых LLM-сессий):
-
-- **5 LLM:** Planner, Architect, Researcher, Reviewer, Refactor Advisor
-- **8 Hybrid:** Coder, Debugger, Optimizer, Frontend, Backend, Mobile, QA, Debug
-- **7 Tool-only:** Tester, Linter, Static Analyzer, Security Scanner, Dep Checker, Formatter, Diff Generator
-
-**Ключевые фичи:** Wave Isolation, Context Compressor, ContractChecker (3 built-in), Verifiable Artifacts, Auto-Fix Patterns (14), TaskContext.
 
 ## Документация
 
