@@ -1,0 +1,30 @@
+{
+    "name": "@jarvis/cli",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "bin": {
+        "jarvis": "dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@jarvis/core": "workspace:*",
+        "@jarvis/brain": "workspace:*",
+        "@jarvis/watchdog": "workspace:*",
+        "@jarvis/swarm": "workspace:*",
+        "@jarvis/memory": "workspace:*",
+        "@jarvis/metrics": "workspace:*",
+        "@jarvis/pipeline": "workspace:*",
+        "@jarvis/sandbox-policy": "workspace:*",
+        "commander": "^13.0.0",
+        "chalk": "^5.4.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.0"
+    }
+}

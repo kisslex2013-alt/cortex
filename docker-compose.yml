@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm build && cd packages/api-gateway && pnpm start"
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+
+  dashboard:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm build && cd packages/dashboard && pnpm preview --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api-gateway

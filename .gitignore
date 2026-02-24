@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime
+*.pid
+*.sock
+
+# Secrets
+*.pem
+*.key
+
+# Coverage
+coverage/
+
+# Temp
+tmp/
+temp/
+
+# Legacy reference (cloned for research)
+jarvis-core/

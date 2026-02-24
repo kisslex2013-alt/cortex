@@ -1,0 +1,28 @@
+{
+    "name": "@jarvis/api-gateway",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "start": "node dist/index.js",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@jarvis/core": "workspace:*",
+        "@jarvis/watchdog": "workspace:*",
+        "@jarvis/swarm": "workspace:*",
+        "@jarvis/memory": "workspace:*",
+        "express": "^4.21.0",
+        "cors": "^2.8.5",
+        "ws": "^8.18.0"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/cors": "^2.8.17",
+        "@types/ws": "^8.5.12",
+        "typescript": "^5.7.0"
+    }
+}
